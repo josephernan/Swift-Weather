@@ -1,0 +1,486 @@
+{{ '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js' | script_tag }}
+
+<div class="grid-adv" itemscope itemtype="http://schema.org/Product">
+  <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
+  <meta itemprop="image" content="{{ product.featured_image.src | img_url: 'grande' }}">
+<div class="grid-item-adv">
+   {% comment %} {% include 'advanced-tag-loop' %}{% endcomment %}
+
+{% comment %}
+  A recursive loop to catch and filter out the different tag categories.
+  This is mainly for advanced tagging, but will also help us strip
+  out any tag categories from our tags (E.g. remove BRAND_ from BRAND_tag)
+{% endcomment %}
+{% if template contains 'collection' and collection.all_tags.size > 0 %}
+  {% assign c = 0 %}
+  {% for t in collection.all_tags %}
+  {% capture cat %}{{ cat }}{% capture temp_cat %}{% if t contains '_' %}{% assign cat_grp = t | split: '_' %}{{ cat_grp.first }}{% endif %}{% endcapture %}{% unless cat contains temp_cat %}{% if t contains '_' %}{% assign new_cat_grp = t | split: '_' %}{{ new_cat_grp.first }}{% endif %}{% unless forloop.last %}+{% endunless %}{% assign c = c | plus: 1 %}{% endunless %}{% endcapture %}
+  {% endfor %}
+  {% assign cat_array = cat | split: '+' %}
+{% endif %}
+
+{% unless template == 'index' or template == 'cart' %}
+<nav class="breadcrumb-adv" role="navigation" aria-label="breadcrumbs">
+  <a href="/" title="Home">Home</a>
+
+  {% if template contains 'product' %}
+
+    {% if collection %}
+      <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+      {% if collection.handle %}
+        {% capture url %}/collections/{{ collection.handle }}{% endcapture %}
+        {{ collection.title | link_to: url }}
+      {% endif %}
+    {% endif %}
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+    <span class="breadcrumb--truncate">{{ product.title }}</span>
+
+  {% elsif template contains 'collection' and collection.handle %}
+
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+    {% if current_tags %}
+      {% capture url %}/collections/{{ collection.handle }}{% endcapture %}
+      {{ collection.title | link_to: url }}
+      <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+
+      {% comment %}
+        Loop through tags and our custom tag array to strip out prepended tag categories if they exist.
+        snippet/advanced-tag-loop.liquid is required for this to work.
+      {% endcomment %}
+      {% for tag in current_tags %}
+        {% assign is_advanced_tag = false %}
+        {% assign additional_tag = true %}
+        {% if forloop.first %}
+          {% assign additional_tag = false %}
+        {% endif %}
+
+        {% comment %}
+          Track whether the tag gets printed
+        {% endcomment %}
+        {% assign found_tag = false %}
+
+        {% for cat_item in cat_array %}
+          {% unless cat_item == '' %}
+
+            {% if tag contains cat_item %}
+              {% assign is_advanced_tag = true %}
+              {% if additional_tag %}
+                <span>+</span>
+              {% endif %}
+              {% assign found_tag = true %}
+              <span>
+                {{ tag | remove_first: cat_item | remove: '_' }}
+              </span>
+            {% endif %}
+          {% endunless %}
+        {% endfor %}
+
+        {% comment %}
+          We have a regular tag that wasn't printed, so print it now
+        {% endcomment %}
+        {% unless found_tag %}
+          <span>{{ tag }}</span>
+        {% endunless %}
+
+      {% endfor %}
+
+    {% else %}
+      <span>{{ collection.title }}</span>
+    {% endif %}
+
+  {% elsif template == 'blog' %}
+
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+    {% if current_tags %}
+      {{ blog.title | link_to: blog.url }}
+      <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+      <span>{{ current_tags | join: " + " }}</span>
+    {% else %}
+    <span>{{ blog.title }}</span>
+    {% endif %}
+
+  {% elsif template == 'article' %}
+
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+    {{ blog.title | link_to: blog.url }}
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+    <span>{{ article.title }}</span>
+
+  {% elsif template contains 'page' %}
+
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+   <span>{{ page.title }}</span>
+
+  {% else %}
+
+    <span class="divider-adv" aria-hidden="true">&rsaquo;</span>
+   <span>{{ page_title }}</span>
+
+  {% endif %}
+</nav>
+{% endunless %}
+
+{% comment %} {% include 'breadcrumb' %} {% endcomment %} 
+  </div>
+   <div class="grid-item-adv large_3_5-adv">
+    
+    <div class="grid-adv">
+      <div class="grid-item-adv large_11-12-adv text-center-adv">
+      
+     
+
+     <div class="product-photo-container-adv large_5_6-adv" id="productPhoto">      
+          
+          {% assign featured_image = product.selected_or_first_available_variant.featured_image | default: product.featured_image %}
+          <img id="productPhotoImg" src="{{ featured_image | img_url: 'large' }}" alt="{{ featured_image.alt | escape }}" {% if settings.product_image_zoom_enable %} data-zoom="{{ featured_image | img_url: '1024x1024' }}"{% endif %}>
+     </div>
+        
+        {% if product.images.size > 1 %} 
+          <ul class="grid-uniform-adv large_1_6-adv" id="productThumbs">  
+
+            {% for image in product.images %}
+              <li class="grid-item-adv large_1_whole-adv">  
+                <a href="{{ image.src | img_url: 'large' }}" class="product-photo-thumb">
+                  <img src="{{ image.src | img_url: 'compact' }}" alt="{{ image.alt | escape }}">
+                </a>
+              </li>
+            {% endfor %}
+
+          </ul>
+        {% endif %}
+        
+      </div>
+    </div>
+
+   </div>
+
+
+   <div class="grid-item-adv large_2_5-adv">
+
+    <h2 class="product-title-adv" itemprop="name">{{ product.title }}</h2>
+
+    <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+
+      {% assign variant = product.selected_or_first_available_variant %}
+
+      <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+      <meta itemprop="price" content="{{ variant.price | money }}">
+
+      {% if settings.product_vendor_enable %}
+        <p class="product-meta-adv" itemprop="brand">{{ product.vendor }}</p>
+      {% endif %}
+
+      <ul class="product-meta-adv">
+        <li>
+          <span id="productPrice" class="h1">            
+
+    {% assign formatted_price = variant.price | money %}
+
+{% if settings.remove_dollar_symbol %}
+  {% assign formatted_price = formatted_price | remove: '$' %}
+{% endif %}
+
+{% comment %}
+  Unless this store uses multiple currencies,
+  if we apply a special style to cents,
+  we will wrap them in a sup (superscript) element.
+{% endcomment %}
+
+{% unless shop.money_format contains 'money' %}
+  {% if settings.superscript_decimals %}
+    {% if shop.money_format contains '{{amount}}' %}
+      {% capture formatted_price %}{{ formatted_price | replace: '.','<sup>' }}</sup>{% endcapture %}
+    {% elsif shop.money_format contains '{{amount_with_comma_separator}}' %}
+      {% capture formatted_price %}{{ formatted_price | replace: ',','<sup>' }}</sup>{% endcapture %}
+    {% endif %}
+  {% endif %}
+{% endunless %}
+
+<small>{{ formatted_price }}</small>     
+           
+          </span>
+        </li>
+     </ul>
+     
+     
+    <div class="rte-adv" itemprop="description">
+      {{ product.description }}
+    </div>
+      
+    
+      <link itemprop="availability" href="http://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}">
+
+      <form action="/cart/add" method="post" enctype="multipart/form-data" id="addToCartForm" class="select-label-adv">
+        <select name="id" id="productSelect_al" class="product-variants">
+          {% for variant in product.variants %}
+            {% if variant.available %}
+
+              <option {% if variant == product.selected_or_first_available_variant %} selected="selected" {% endif %} value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money_with_currency }}</option>
+
+            {% else %}
+              <option disabled="disabled">
+                {{ variant.title }} - Sold Out
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+       
+        <label for="quantity" class="quantity-selector-adv">Quantity</label>
+          <input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-selector-adv">
+
+        <div class="atc-btn-adv">
+        <button type="submit" name="add" id="addToCart" class="btn add-to-cart-btn-adv">
+          <span class="icon icon-cart"></span>
+          <span id="addToCartText">Add to Cart</span>
+        </button>
+        </div>
+        <span id="variantQuantity" class="variant-quantity"></span>
+      </form>
+
+    </div>
+
+    
+   {% capture permalinkURL %}{{ shop.url }}{{ product.url }}{% endcapture %}
+  {% capture shareTitle %}{{ product.title }}{% endcapture %}
+<div class="social-sharing-adv" data-permalink="{{ permalinkURL }}">
+
+    <a target="_blank" href="//www.facebook.com/sharer.php?u={{ permalinkURL }}">
+      <span class="icon-adv icon-facebook-adv"> 
+        <img src="{{ 'f-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+      </span>
+     </a>
+  
+    <a target="_blank" href="//twitter.com/share?url={{ permalinkURL }}&amp;text={{ shareTitle }}" class="">
+      <span class="icon-adv icon-twitter-adv">
+      <img src="{{ 't-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+      </span>
+     </a>
+
+  <a target="_blank" href="//pinterest.com/pin/create/button/?url={{ permalinkURL }}&amp;media={{ product.featured_image | img_url: 'original' }}&amp;description={{ product.title | escape }}" class="">
+        <span class="icon-adv icon-pinterest-adv">
+           <img src="{{ 'p-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+    </span>
+     </a>   
+   
+   <a target="_blank" href="//plus.google.com/share?url={{ permalinkURL }}" class="">
+      <!-- Cannot get Google+ share count with JS yet -->
+      <span class="icon-adv icon-google-adv">
+          <img src="{{ 'gp-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+     </span>
+    </a>
+
+</div> 
+    
+  </div>
+</div>
+
+{% if settings.related_products_enable %}
+  {% assign grid_item_width = 'large--one-fifth medium--one-third small--one-half' %}
+
+{% endif %}
+
+<script>
+/* -----variant_selection.js ---*/
+function floatToString(t,e){var o=t.toFixed(e).toString();return o.match(/^\.\d+/)?"0"+o:o}if("undefined"==typeof Shopify)var Shopify={};Shopify.each=function(t,e){for(var o=0;o<t.length;o++)e(t[o],o)},Shopify.map=function(t,e){for(var o=[],i=0;i<t.length;i++)o.push(e(t[i],i));return o},Shopify.arrayIncludes=function(t,e){for(var o=0;o<t.length;o++)if(t[o]==e)return!0;return!1},Shopify.uniq=function(t){for(var e=[],o=0;o<t.length;o++)Shopify.arrayIncludes(e,t[o])||e.push(t[o]);return e},Shopify.isDefined=function(t){return"undefined"==typeof t?!1:!0},Shopify.getClass=function(t){return Object.prototype.toString.call(t).slice(8,-1)},Shopify.extend=function(t,e){function o(){}o.prototype=e.prototype,t.prototype=new o,t.prototype.constructor=t,t.baseConstructor=e,t.superClass=e.prototype},Shopify.urlParam=function(t){var e=RegExp("[?&]"+t+"=([^&]*)").exec(window.location.search);return e&&decodeURIComponent(e[1].replace(/\+/g," "))},Shopify.Product=function(t){Shopify.isDefined(t)&&this.update(t)},Shopify.Product.prototype.update=function(t){for(property in t)this[property]=t[property]},Shopify.Product.prototype.optionNames=function(){return"Array"==Shopify.getClass(this.options)?this.options:[]},Shopify.Product.prototype.optionValues=function(t){if(!Shopify.isDefined(this.variants))return null;var e=Shopify.map(this.variants,function(e){var o="option"+(t+1);return void 0==e[o]?null:e[o]});return null==e[0]?null:Shopify.uniq(e)},Shopify.Product.prototype.getVariant=function(t){var e=null;return t.length!=this.options.length?e:(Shopify.each(this.variants,function(o){for(var i=!0,r=0;r<t.length;r++){var n="option"+(r+1);o[n]!=t[r]&&(i=!1)}return 1==i?void(e=o):void 0}),e)},Shopify.Product.prototype.getVariantById=function(t){for(var e=0;e<this.variants.length;e++){var o=this.variants[e];if(t==o.id)return o}return null},Shopify.money_format="${{amount}}",Shopify.formatMoney=function(t,e){function o(t,e){return"undefined"==typeof t?e:t}function i(t,e,i,r){if(e=o(e,2),i=o(i,","),r=o(r,"."),isNaN(t)||null==t)return 0;t=(t/100).toFixed(e);var n=t.split("."),a=n[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g,"$1"+i),s=n[1]?r+n[1]:"";return a+s}"string"==typeof t&&(t=t.replace(".",""));var r="",n=/\{\{\s*(\w+)\s*\}\}/,a=e||this.money_format;switch(a.match(n)[1]){case"amount":r=i(t,2);break;case"amount_no_decimals":r=i(t,0);break;case"amount_with_comma_separator":r=i(t,2,".",",");break;case"amount_no_decimals_with_comma_separator":r=i(t,0,".",",")}return a.replace(n,r)},Shopify.OptionSelectors=function(t,e){return this.radioDivClass="radio-wrapper",this.selectorClass="single-option-selector",this.radioClass="single-option-radio",this.variantIdFieldIdSuffix="-variant-id",this.variantIdField=null,this.historyState=null,this.selectors=[],this.domIdPrefix=t,this.product=new Shopify.Product(e.product),this.onVariantSelected=Shopify.isDefined(e.onVariantSelected)?e.onVariantSelected:function(){},this.replaceSelector(t),this.initDropdown(),e.enableHistoryState&&(this.historyState=new Shopify.OptionSelectors.HistoryState(this)),!0},Shopify.OptionSelectors.prototype.initDropdown=function(){var t={initialLoad:!0},e=this.selectVariantFromDropdown(t);if(!e){var o=this;setTimeout(function(){o.selectVariantFromParams(t)||o.fireOnChangeForFirstDropdown.call(o,t)})}},Shopify.OptionSelectors.prototype.fireOnChangeForFirstDropdown=function(t){this.selectors[0].element.onchange(t)},Shopify.OptionSelectors.prototype.selectVariantFromParamsOrDropdown=function(t){var e=this.selectVariantFromParams(t);e||this.selectVariantFromDropdown(t)},Shopify.OptionSelectors.prototype.replaceSelector=function(t){var e=document.getElementById(t),o=e.parentNode;Shopify.each(this.buildSelectors(),function(t){o.insertBefore(t,e)}),e.style.display="none",this.variantIdField=e},Shopify.OptionSelectors.prototype.selectVariantFromDropdown=function(t){var e=document.getElementById(this.domIdPrefix).querySelector('[selected="selected"]');if(e||(e=document.getElementById(this.domIdPrefix).querySelector("[selected]")),!e)return!1;var o=e.value;return this.selectVariant(o,t)},Shopify.OptionSelectors.prototype.selectVariantFromParams=function(t){var e=Shopify.urlParam("variant");return this.selectVariant(e,t)},Shopify.OptionSelectors.prototype.selectVariant=function(t,e){var o=this.product.getVariantById(t);if(null==o)return!1;for(var i=0;i<this.selectors.length;i++){var r=this.selectors[i].element,n=r.getAttribute("data-option"),a=o[n];if(null!=a&&this.optionExistInSelect(r,a))if("select"===r.tagName.toLowerCase())r.value=a;else for(var s=0;s<r.childNodes.length;s++)r.childNodes[s].value===a&&(r.childNodes[s].checked=!0)}return"undefined"!=typeof jQuery?jQuery(this.selectors[0].element).trigger("change",e):this.selectors[0].element.onchange(e),!0},Shopify.OptionSelectors.prototype.optionExistInSelect=function(t,e){var o,i,r;"select"===t.tagName.toLowerCase()?(o=t.options.length,i=!0):(o=t.childNodes.length,i=!1);for(var n=0;o>n;n++)if(r=i?t.options[n].value:t.childNodes[n].value,r=e)return!0},Shopify.OptionSelectors.prototype.insertSelectors=function(t,e){Shopify.isDefined(e)&&this.setMessageElement(e),this.domIdPrefix="product-"+this.product.id+"-variant-selector";var o=document.getElementById(t);Shopify.each(this.buildSelectors(),function(t){o.appendChild(t)})},Shopify.OptionSelectors.prototype.buildSelectors=function(){for(var t=0;t<this.product.optionNames().length;t++){var e=new Shopify.SingleOptionRadio(this,t,this.product.optionNames()[t],this.product.optionValues(t));e.element.disabled=!1,this.selectors.push(e)}var o=this.radioDivClass,i=this.product.optionNames(),r=Shopify.map(this.selectors,function(t,e){var r=document.createElement("div");if(r.setAttribute("class",o),r.appendChild(t.element),i.length>1){var n=document.createElement("label");n.setAttribute("class","single-option-radio__label"),n.htmlFor=t.element.id,n.innerHTML=t.name,r.appendChild(n)}return r.setAttribute("class",o),r.appendChild(t.element),r});return r},Shopify.OptionSelectors.prototype.selectedValues=function(){for(var t,e,o=[],i=0;i<this.selectors.length;i++){if(t=this.selectors[i],"select"===t.element.tagName.toLowerCase())e=t.element.value;else for(var r=0;r<t.element.childNodes.length;r++)(t.element.childNodes[r].checked===!0||t.element.childNodes[r].status===!0)&&(e=t.element.childNodes[r].value);o.push(e)}return o},Shopify.OptionSelectors.prototype.updateSelectors=function(t,e){var o=this.selectedValues(),i=this.product.getVariant(o);i?(this.variantIdField.disabled=!1,this.variantIdField.value=i.id):this.variantIdField.disabled=!0,this.onVariantSelected(i,this,e),null!=this.historyState&&this.historyState.onVariantChange(i,this,e)},Shopify.OptionSelectorsFromDOM=function(t,e){var o=e.optionNames||[],i=e.priceFieldExists||!0,r=e.delimiter||"/",n=this.createProductFromSelector(t,o,i,r);e.product=n,Shopify.OptionSelectorsFromDOM.baseConstructor.call(this,t,e)},Shopify.extend(Shopify.OptionSelectorsFromDOM,Shopify.OptionSelectors),Shopify.OptionSelectorsFromDOM.prototype.createProductFromSelector=function(t,e,o,i){if(!Shopify.isDefined(o))var o=!0;if(!Shopify.isDefined(i))var i="/";var r=document.getElementById(t),n=r.childNodes,a=(r.parentNode,e.length),s=[];Shopify.each(n,function(t,r){if(1==t.nodeType&&"option"==t.tagName.toLowerCase()){var n=t.innerHTML.split(new RegExp("\\s*\\"+i+"\\s*"));0==e.length&&(a=n.length-(o?1:0));var l=n.slice(0,a),p=o?n[a]:"",c=(t.getAttribute("value"),{available:t.disabled?!1:!0,id:parseFloat(t.value),price:p,option1:l[0],option2:l[1],option3:l[2]});s.push(c)}});var l={variants:s};if(0==e.length){l.options=[];for(var p=0;a>p;p++)l.options[p]="option "+(p+1)}else l.options=e;return l},Shopify.SingleOptionRadio=function(t,e,o,i){this.multiSelector=t;this.multiSelector.selectors;this.values=i,this.index=e,this.name=o,this.element=document.createElement("fieldset");for(var r=0;r<i.length;r++){var n=document.createElement("input"),a=document.createElement("label");n.type="radio",n.value=i[r],n.setAttribute("name",o),n.setAttribute("class",this.multiSelector.selectorClass+"__radio"),n.setAttribute("data-option","option"+(e+1)),n.id=t.domIdPrefix+"-option-"+o.replace(/\s/,"-")+"-"+i[r].replace(/\s/,"-"),a.htmlFor=n.id,a.innerHTML=i[r],this.multiSelector.product.variants[r].available||1!==this.multiSelector.product.options.length||($(n).addClass("disabled").attr("disabled","disabled"),$(a).addClass("disabled")),this.element.appendChild(n),this.element.appendChild(a)}return this.element.setAttribute("class",this.multiSelector.radioClass),this.element.setAttribute("data-option","option"+(e+1)),this.element.name=o,this.element.id=t.domIdPrefix+"-option-"+e,this.element.onchange=function(o,i){i=i||{},t.updateSelectors(e,i)},!0},Shopify.Image={preload:function(t,e){for(var o=0;o<t.length;o++){var i=t[o];this.loadImage(this.getSizedImageUrl(i,e))}},loadImage:function(t){(new Image).src=t},switchImage:function(t,e,o){if(t&&e){var i=this.imageSize(e.src),r=this.getSizedImageUrl(t.src,i);o?o(r,t,e):e.src=r}},imageSize:function(t){var e=t.match(/_(1024x1024|2048x2048|pico|icon|thumb|small|compact|medium|large|grande)\./);return null!=e?e[1]:null},getSizedImageUrl:function(t,e){if(null==e)return t;if("master"==e)return this.removeProtocol(t);var o=t.match(/\.(jpg|jpeg|gif|png|bmp|bitmap|tiff|tif)(\?v=\d+)?$/i);if(null!=o){var i=t.split(o[0]),r=o[0];return this.removeProtocol(i[0]+"_"+e+r)}return null},removeProtocol:function(t){return t.replace(/http(s)?:/,"")}},Shopify.OptionSelectors.HistoryState=function(t){this.browserSupports()&&this.register(t)},Shopify.OptionSelectors.HistoryState.prototype.register=function(t){window.addEventListener("popstate",function(e){t.selectVariantFromParamsOrDropdown({popStateCall:!0})})},Shopify.OptionSelectors.HistoryState.prototype.onVariantChange=function(t,e,o){this.browserSupports()&&(!t||o.initialLoad||o.popStateCall||window.history.replaceState({},document.title,"?variant="+t.id))},Shopify.OptionSelectors.HistoryState.prototype.browserSupports=function(){return window.history&&window.history.replaceState};  
+</script>
+
+<script>
+  // Pre-loading product images, to avoid a lag when a thumbnail is clicked, or
+  // when a variant is selected that has a variant image.
+  Shopify.Image.preload({{ product.images | json }}, 'large');
+
+  var selectCallback = function(variant, selector) {
+
+    var $addToCart = $('#addToCart'),
+        $productPrice = $('#productPrice'),
+        //$comparePrice = $('#comparePrice'),
+    //    $variantQuantity = $('#variantQuantity'),
+        $quantityElements = $('.quantity-selector-adv, label + .js-qty'),
+        $addToCartText = $('#addToCartText'),
+        $featuredImage = $('#productPhotoImg');
+
+    if (variant) {
+      // Update variant image, if one is set
+      // Call timber_al.switchImage function in shop.js
+      if (variant.featured_image) {
+        var newImg = variant.featured_image,
+            el = $featuredImage[0];
+        Shopify.Image.switchImage(newImg, el, timber_al.switchImage);
+      }
+
+      // Select a valid variant if available
+      if (variant.available) {
+        // We have a valid product variant, so enable the submit button
+        $addToCart.removeClass('disabled').prop('disabled', false);
+        $addToCartText.html('Add to Cart');
+
+        // Show how many items are left, if below 10
+      /*  if (variant.inventory_management) {
+          if (variant.inventory_quantity < 10 && variant.inventory_quantity > 0) {
+            $variantQuantity.html({{ 'products.product.only_left' | t: count: '1' | json }}.replace('1', variant.inventory_quantity)).show();
+          } else {
+            $variantQuantity.hide();
+          }
+        }
+         */
+
+        $quantityElements.show();
+      } else {
+        // Variant is sold out, disable the submit button
+        $addToCart.addClass('disabled').prop('disabled', true);
+        $addToCartText.html('Sold Out');
+     //   $variantQuantity.hide();
+        $quantityElements.hide();
+      }
+
+      // Regardless of stock, update the product price
+      var customPriceFormat = timber_al.formatMoney( Shopify.formatMoney(variant.price, "{{ shop.money_format }}") );
+      $productPrice.html('$' + customPriceFormat);
+
+      // Also update and show the product's compare price if necessary
+      if ( variant.compare_at_price > variant.price ) {
+        var priceSaving = timber_al.formatSaleTag( Shopify.formatMoney(variant.compare_at_price - variant.price, "{{ shop.money_format }}") );
+        {% comment %}
+        priceSaving += ' (' + ( (variant.compare_at_price - variant.price)*100/(variant.compare_at_price) ).toFixed(0) + '%)';
+        {% endcomment %}
+        //$comparePrice.prepend('Save');
+        //$comparePrice.html({{ json["save_html"] | t: saved_amount: '[$]' | json }}.replace('[$]', priceSaving)).show();
+      } else {
+        //$comparePrice.hide();
+      }
+
+    } else {
+      // The variant doesn't exist, disable submit button.
+      // This may be an error or notice that a specific variant is not available.
+      $addToCart.addClass('disabled').prop('disabled', true);
+      $addToCartText.html('Unavailable');
+    //  $variantQuantity.hide();
+      $quantityElements.hide();
+    }
+  };
+
+   jQuery(function($) {
+    new Shopify.OptionSelectors('productSelect_al', {
+      product: {{ product | json }},
+      onVariantSelected: selectCallback,
+      enableHistoryState: true
+    });
+
+     // Add label if only one product option and it isn't 'Title'. Could be 'Size'.
+    {% if product.options.size == 1 and product.options.first != 'Title' %}
+      $('.radio-wrapper:eq(0)').prepend('<label for="productSelect_al-option-0" class="single-option-radio__label">{{ product.options.first | escape }}</label>');
+    {% endif %}
+
+    // Hide drop-down selectors if we only have 1 variant and its title contains 'Default'.
+    {% if product.variants.size == 1 and product.variants.first.title contains 'Default' %}
+      $('.selector-wrapper').hide();
+    {% endif %}
+  });
+</script>
+
+
+<script>/*!
+	Zoom v1.7.13 - 2014-04-29
+	Enlarge images on click or mouseover.
+	(c) 2014 Jack Moore - http://www.jacklmoore.com/zoom
+	license: http://www.opensource.org/licenses/mit-license.php
+*/
+(function(o){var t={url:!1,callback:!1,target:!1,duration:120,on:"mouseover",touch:!0,onZoomIn:!1,onZoomOut:!1,magnify:1};o.zoom=function(t,n,e,i){var u,c,a,m,l,r,s,f=o(t).css("position"),h=o(n);return t.style.position=/(absolute|fixed)/.test(f)?f:"relative",t.style.overflow="hidden",e.style.width=e.style.height="",o(e).addClass("zoomImg").css({position:"absolute",top:0,left:0,opacity:0,width:e.width*i,height:e.height*i,border:"none",maxWidth:"none",maxHeight:"none"}).appendTo(t),{init:function(){c=o(t).outerWidth(),u=o(t).outerHeight(),n===t?(m=c,a=u):(m=h.outerWidth(),a=h.outerHeight()),l=(e.width-c)/m,r=(e.height-u)/a,s=h.offset()},move:function(o){var t=o.pageX-s.left,n=o.pageY-s.top;n=Math.max(Math.min(n,a),0),t=Math.max(Math.min(t,m),0),e.style.left=t*-l+"px",e.style.top=n*-r+"px"}}},o.fn.zoom=function(n){return this.each(function(){var e,i=o.extend({},t,n||{}),u=i.target||this,c=this,a=o(c),m=document.createElement("img"),l=o(m),r="mousemove.zoom",s=!1,f=!1;(i.url||(e=a.find("img"),e[0]&&(i.url=e.data("src")||e.attr("src")),i.url))&&(function(){var o=u.style.position,t=u.style.overflow;a.one("zoom.destroy",function(){a.off(".zoom"),u.style.position=o,u.style.overflow=t,l.remove()})}(),m.onload=function(){function t(t){e.init(),e.move(t),l.stop().fadeTo(o.support.opacity?i.duration:0,1,o.isFunction(i.onZoomIn)?i.onZoomIn.call(m):!1)}function n(){l.stop().fadeTo(i.duration,0,o.isFunction(i.onZoomOut)?i.onZoomOut.call(m):!1)}var e=o.zoom(u,c,m,i.magnify);"grab"===i.on?a.on("mousedown.zoom",function(i){1===i.which&&(o(document).one("mouseup.zoom",function(){n(),o(document).off(r,e.move)}),t(i),o(document).on(r,e.move),i.preventDefault())}):"click"===i.on?a.on("click.zoom",function(i){return s?void 0:(s=!0,t(i),o(document).on(r,e.move),o(document).one("click.zoom",function(){n(),s=!1,o(document).off(r,e.move)}),!1)}):"toggle"===i.on?a.on("click.zoom",function(o){s?n():t(o),s=!s}):"mouseover"===i.on&&(e.init(),a.on("mouseenter.zoom",t).on("mouseleave.zoom",n).on(r,e.move)),i.touch&&a.on("touchstart.zoom",function(o){o.preventDefault(),f?(f=!1,n()):(f=!0,t(o.originalEvent.touches[0]||o.originalEvent.changedTouches[0]))}).on("touchmove.zoom",function(o){o.preventDefault(),e.move(o.originalEvent.touches[0]||o.originalEvent.changedTouches[0])}),o.isFunction(i.callback)&&i.callback.call(m)},m.src=i.url)})},o.fn.zoom.defaults=t})(window.jQuery);
+</script>
+
+
+<script>
+  /* Simple jQuery Equal Heights @version 1.5.1. Copyright (c) 2013 Matt Banks. Dual licensed under the MIT and GPL licenses. */
+!function(a){a.fn.equalHeights=function(){var b=0,c=a(this);return c.each(function(){var c=a(this).innerHeight();c>b&&(b=c)}),c.css("height",b)},a("[data-equal]").each(function(){var b=a(this),c=b.data("equal");b.find(c).equalHeights()})}(jQuery);
+
+/* Run function after window resize */
+var afterResize=(function(){var t={};return function(callback,ms,uniqueId){if(!uniqueId){uniqueId="Don't call this twice without a uniqueId";}if(t[uniqueId]){clearTimeout(t[uniqueId]);}t[uniqueId]=setTimeout(callback,ms);};})();
+
+window.timber_al = window.timber_al || {};
+
+
+timber_al.cacheSelectors = function () {
+  timber_al.cache = {
+    // General
+    $html: $('html'),
+    $body: $('body'),
+    $breadcrumbs: $('.breadcrumb'),
+
+    // Breakpoints (from timber_al.scss.liquid)
+    bpLarge: 769,
+
+   
+    // Product Page
+    $productImageWrap: $('#productPhoto'),
+    $productImage: $('#productPhotoImg'),
+    $thumbImages: $('#productThumbs').find('a.product-photo-thumb')
+  };
+}
+
+timber_al.init = function () {
+  timber_al.cacheSelectors();
+  timber_al.productImageSwitch();
+  timber_al.productImageZoom();
+};
+
+
+
+timber_al.productImageSwitch = function () {
+  if ( timber_al.cache.$thumbImages.length ) {
+    // Switch the main image with one of the thumbnails
+    // Note: this does not change the variant selected, just the image
+    timber_al.cache.$thumbImages.on('click', function(evt) {
+      evt.preventDefault();
+      var newImage = $(this).attr('href');
+      timber_al.switchImage(newImage, null, timber_al.cache.$productImage);
+    });
+  }
+};
+
+timber_al.switchImage = function (src, imgObject, el) {
+  // Make sure element is a jquery object
+  var $el = $(el);
+  $el.attr('src', src);
+    // Update new image src to grande
+    var zoomSrc = src.replace('_medium.','_1024x1024.').replace('_large.','_1024x1024.');
+    $el.attr('data-zoom', zoomSrc);
+
+    $(function() {
+      timber_al.productImageZoom();
+    });
+};
+
+ 
+
+
+timber_al.formatMoney = function (val) {
+    val = val.replace('$','');
+    if (moneyFormat.indexOf('money') === -1) {
+      if (moneyFormat.indexOf({% raw %}'{{amount}}'{% endraw %}) > -1) {
+        val = val.replace('.','<sup>') + '</sup>';
+      }
+      else if (moneyFormat.indexOf({% raw %}'{{amount_with_comma_separator}}'{% endraw %}) > -1) {
+        val = val.replace(',','<sup>') + '</sup>';
+      }    
+    }
+  
+  return val;
+};
+
+timber_al.formatSaleTag = function (val) {
+  if (moneyFormat.indexOf('money') === -1) {
+    if (moneyFormat.indexOf({% raw %}'{{amount}}'{% endraw %}) > -1) {
+      return val.replace('.','<sup>') + '</sup>';
+    }
+    else if (moneyFormat.indexOf({% raw %}'{{amount_with_comma_separator}}'{% endraw %}) > -1) {
+      return val.replace(',','<sup>') + '</sup>';
+    }
+  }
+  return val;
+};
+
+// Initialize timber_al's JS on docready
+$(timber_al.init)
+
+var moneyFormat = '{{ shop.money_format }}';
+</script>

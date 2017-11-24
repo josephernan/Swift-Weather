@@ -1,0 +1,610 @@
+{% comment %}{% include 'breadcrumb' %} {% endcomment %}
+{{ '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js' | script_tag }}
+
+<div class="grid-0311" itemscope itemtype="http://schema.org/Product">
+  <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
+  <meta itemprop="image" content="{{ product.featured_image.src | img_url: 'grande' }}">
+<div class="grid-item-0411">
+   {% comment %} {% include 'advanced-tag-loop' %}{% endcomment %}
+
+{% comment %}
+  A recursive loop to catch and filter out the different tag categories.
+  This is mainly for advanced tagging, but will also help us strip
+  out any tag categories from our tags (E.g. remove BRAND_ from BRAND_tag)
+{% endcomment %}
+{% if template contains 'collection' and collection.all_tags.size > 0 %}
+  {% assign c = 0 %}
+  {% for t in collection.all_tags %}
+  {% capture cat %}{{ cat }}{% capture temp_cat %}{% if t contains '_' %}{% assign cat_grp = t | split: '_' %}{{ cat_grp.first }}{% endif %}{% endcapture %}{% unless cat contains temp_cat %}{% if t contains '_' %}{% assign new_cat_grp = t | split: '_' %}{{ new_cat_grp.first }}{% endif %}{% unless forloop.last %}+{% endunless %}{% assign c = c | plus: 1 %}{% endunless %}{% endcapture %}
+  {% endfor %}
+  {% assign cat_array = cat | split: '+' %}
+{% endif %}                                                                                                                                       
+
+{% unless template == 'index' or template == 'cart' %}
+<nav class="breadcrumb-0311" role="navigation" aria-label="breadcrumbs">
+  <a href="/" title="Home">Home</a>
+
+  {% if template contains 'product' %}
+
+    {% if collection %}
+      <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+      {% if collection.handle %}
+        {% capture url %}/collections/{{ collection.handle }}{% endcapture %}
+        {{ collection.title | link_to: url }}
+      {% endif %}
+    {% endif %}
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+    <span class="breadcrumb--truncate">{{ product.title }}</span>
+
+  {% elsif template contains 'collection' and collection.handle %}
+
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+    {% if current_tags %}
+      {% capture url %}/collections/{{ collection.handle }}{% endcapture %}
+      {{ collection.title | link_to: url }}
+      <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+
+      {% comment %}
+        Loop through tags and our custom tag array to strip out prepended tag categories if they exist.
+        snippet/advanced-tag-loop.liquid is required for this to work.
+      {% endcomment %}
+      {% for tag in current_tags %}
+        {% assign is_advanced_tag = false %}
+        {% assign additional_tag = true %}
+        {% if forloop.first %}
+          {% assign additional_tag = false %}
+        {% endif %}
+
+        {% comment %}
+          Track whether the tag gets printed
+        {% endcomment %}
+        {% assign found_tag = false %}
+
+        {% for cat_item in cat_array %}
+          {% unless cat_item == '' %}
+
+            {% if tag contains cat_item %}
+              {% assign is_advanced_tag = true %}
+              {% if additional_tag %}
+                <span>+</span>
+              {% endif %}
+              {% assign found_tag = true %}
+              <span>
+                {{ tag | remove_first: cat_item | remove: '_' }}
+              </span>
+            {% endif %}
+          {% endunless %}
+        {% endfor %}
+
+        {% comment %}
+          We have a regular tag that wasn't printed, so print it now
+        {% endcomment %}
+        {% unless found_tag %}
+          <span>{{ tag }}</span>
+        {% endunless %}
+
+      {% endfor %}
+
+    {% else %}
+      <span>{{ collection.title }}</span>
+    {% endif %}
+
+  {% elsif template == 'blog' %}
+
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+    {% if current_tags %}
+      {{ blog.title | link_to: blog.url }}
+      <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+      <span>{{ current_tags | join: " + " }}</span>
+    {% else %}
+    <span>{{ blog.title }}</span>
+    {% endif %}
+
+  {% elsif template == 'article' %}
+
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+    {{ blog.title | link_to: blog.url }}
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+    <span>{{ article.title }}</span>
+
+  {% elsif template contains 'page' %}
+
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+   <span>{{ page.title }}</span>
+
+  {% else %}
+
+    <span class="divider-0311" aria-hidden="true">&rsaquo;</span>
+   <span>{{ page_title }}</span>
+
+  {% endif %}
+</nav>
+{% endunless %}
+
+{% comment %} {% include 'breadcrumb' %} {% endcomment %} 
+</div>
+{% comment %} <div class="grid-item large--two-fifths"> {% endcomment %}
+     <div class="grid-item-0411 large_3_5">
+    
+    <div class="grid-0311">
+      <div class="grid-item-0411 large_11-12 text-center-0411">
+{% comment %} code addede by ALT SH (ul) {% endcomment %}        
+     {% if product.images.size > 1 %}
+{% comment %} <ul class="product-photo-thumbs grid-uniform" id="productThumbs">{% endcomment %}  
+          <ul class="grid-uniform-0411 large_1_6" id="productThumbs">  
+
+            {% for image in product.images %}
+{% comment %}  <li class="grid-item medium--down-one-quarter large--one-quarter">{% endcomment %}  
+              <li class="grid-item-0411 large_1_whole">  
+                <a href="{{ image.src | img_url: 'large' }}" class="product-photo-thumb">
+                  <img src="{{ image.src | img_url: 'compact' }}" alt="{{ image.alt | escape }}">
+                </a>
+              </li>
+            {% endfor %}
+
+          </ul>
+        {% endif %}
+{% comment %} code addede by ALT EH (ul) {% endcomment %}    
+        
+{% comment %} <div class="product-photo-container" id="productPhoto">{% endcomment %} 
+    <div class="product-photo-container-0411 large_5_6" id="productPhoto">      
+          
+          {% assign featured_image = product.selected_or_first_available_variant.featured_image | default: product.featured_image %}
+          <img id="productPhotoImg" src="{{ featured_image | img_url: 'large' }}" alt="{{ featured_image.alt | escape }}" {% if settings.product_image_zoom_enable %} data-zoom="{{ featured_image | img_url: '1024x1024' }}"{% endif %}>
+        </div>
+        
+{% comment %}        
+        {% if product.images.size > 1 %}
+          <ul class="product-photo-thumbs grid-uniform" id="productThumbs">
+
+            {% for image in product.images %}
+              <li class="grid-item medium--down-one-quarter large--one-quarter">
+                <a href="{{ image.src | img_url: 'large' }}" class="product-photo-thumb">
+                  <img src="{{ image.src | img_url: 'compact' }}" alt="{{ image.alt | escape }}">
+                </a>
+              </li>
+            {% endfor %}
+
+          </ul>
+        {% endif %}
+{% endcomment %}        
+
+      </div>
+    </div>
+
+  </div>
+  
+  
+
+{% comment %}<div class="grid-item large--three-fifths">{% endcomment %}
+   <div class="grid-item-0411 large_2_5">
+
+    <h2 class="product-title-ss2" itemprop="name">{{ product.title }}</h2>
+
+    <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+
+      {% assign variant = product.selected_or_first_available_variant %}
+
+      <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+      <meta itemprop="price" content="{{ variant.price | money }}">
+
+      {% if settings.product_vendor_enable %}
+        <p class="product-meta-0411" itemprop="brand">{{ product.vendor }}</p>
+      {% endif %}
+
+      <ul class="product-meta-0411">
+        <li>
+          <span id="productPrice" class="h1">
+ {% comment %}   {% include 'price' with variant.price %}  {% endcomment %} 
+            
+   {% comment %} code addede by ALT SH (for price) {% endcomment %} 
+    {% assign formatted_price = variant.price | money %}
+            
+{% comment %}
+{% if settings.remove_dollar_symbol %}
+  {% assign formatted_price = formatted_price | remove: '$' %}
+{% endif %}
+{% endcomment %}
+{% comment %}
+  Unless this store uses multiple currencies,
+  if we apply a special style to cents,
+  we will wrap them in a sup (superscript) element.
+{% endcomment %}
+
+          
+{% unless shop.money_format contains 'money' %}
+  {% if settings.superscript_decimals %}
+    {% if shop.money_format contains '{{amount}}' %}
+      {% capture formatted_price %}{{ formatted_price | replace: '.','<sup>' }}</sup>{% endcapture %}
+    {% elsif shop.money_format contains '{{amount_with_comma_separator}}' %}
+      {% capture formatted_price %}{{ formatted_price | replace: ',','<sup>' }}</sup>{% endcapture %}
+    {% endif %}
+  {% endif %}
+{% endunless %}
+     
+
+<small>{{ formatted_price }}</small>        
+            
+   {% comment %} code addede by ALT EH (for price) {% endcomment %}          
+            
+          </span>
+        </li>
+
+     
+      
+        {% if product.compare_at_price_max > product.price %}
+        <li>
+        <span id="comparePrice" class="sale-tag large"> 
+            {% assign compare_price = variant.compare_at_price %}
+            {% assign product_price = variant.price %}
+  {% comment %}    {% include 'price-sale' %}  {% endcomment %}
+   {% comment %} code addede by ALT SH (for price-sale) {% endcomment %}  
+    {% capture saved_amount %}{{ compare_price | minus: product_price | money }}{% endcapture %}
+
+            
+{% comment %}
+  Unless this store uses multiple currencies,
+  we will wrap the cents in a sup (superscript) element,
+  to hide them with CSS.
+{% endcomment %}
+
+ {% comment %}
+{% unless shop.money_format contains 'money' %}
+  {% if shop.money_format contains '{{amount}}' %}
+    {% capture saved_amount %}{{ saved_amount | replace: '.','<sup>' }}</sup>{% endcapture %}
+  {% elsif shop.money_format contains '{{amount_with_comma_separator}}' %}
+    {% capture saved_amount %}{{ saved_amount | replace: ',','<sup>' }}</sup>{% endcapture %}
+  {% endif %}
+{% endunless %}
+    
+
+{% assign saved_amount = saved_amount | strip %}
+{{ saved_amount }}
+{% endcomment %}
+
+{% comment %}
+{% if compare_price > product_price %}
+Save {{ compare_price | minus: product_price | times: 100 | divided_by: compare_price | round }}%
+{% endif %}
+{% endcomment %}
+        
+            
+    {% comment %} code addede by ALT EH (for price-sale) {% endcomment %}            
+          </span>
+        </li>
+        {% endif %}
+
+  
+    {% comment %}    {% if settings.product_reviews_enable %}
+          <li class="product-meta--review">
+            <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+          </li>
+        {% endif %}
+  {% endcomment %} 
+  
+  
+      </ul>
+     
+{% comment %} code addede by ALT SH (product description) {% endcomment %}      
+      <div class="rte-0411" itemprop="description">
+      {{ product.description }}
+    </div>
+      
+{% comment %} code addede by ALT EH (product description) {% endcomment %}      
+      
+
+{% comment %} <hr id="variantBreak" class="hr--clear hr--small">  {% endcomment %}     
+
+      <link itemprop="availability" href="http://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}">
+
+      <form action="/cart/add" method="post" enctype="multipart/form-data" id="addToCartForm" class="select-label-ss3">
+        <select name="id" id="productSelect" class="product-variants">
+          {% for variant in product.variants %}
+            {% if variant.available %}
+
+              <option {% if variant == product.selected_or_first_available_variant %} selected="selected" {% endif %} value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money_with_currency }}</option>
+
+            {% else %}
+              <option disabled="disabled">
+                {{ variant.title }} - Sold Out
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+
+       {%comment%} {% if settings.product_quantity_enable %}
+          <label for="quantity" class="quantity-selector">{{ 'products.product.quantity' | t }}</label>
+          <input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-selector">
+        {% endif %}{%endcomment%} 
+        <!-- Below two lines added for quantity -->
+         <label for="quantity" class="quantity-selector-tee">Quantity</label>
+          <input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-selector-tee">
+        
+
+        <button type="submit" name="add" id="addToCart" class="btn add-to-cart-btn-ss3">
+          <span class="icon icon-cart"></span>
+          <span id="addToCartText">Add to Cart</span>
+        </button>
+
+        <span id="variantQuantity" class="variant-quantity"></span>
+      </form>
+
+{%comment%}      <hr>     {%endcomment%}
+
+    </div>
+{%comment%}
+    <div class="product-description rte" itemprop="description">
+      {{ product.description }}
+    </div>
+{%endcomment%}
+  
+ {% comment %}  code added by ALT (social sharing) (SH) {% endcomment %} 
+    
+   {% capture permalinkURL %}{{ shop.url }}{{ product.url }}{% endcapture %}
+  {% capture shareTitle %}{{ product.title }}{% endcapture %}
+<div class="social-sharing-0711" data-permalink="{{ permalinkURL }}">
+
+    <a target="_blank" href="//www.facebook.com/sharer.php?u={{ permalinkURL }}">
+      <span class="icon-0711 icon-facebook-0711"> 
+        <img src="{{ 'f-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+      </span>
+     </a>
+  
+    <a target="_blank" href="//twitter.com/share?url={{ permalinkURL }}&amp;text={{ shareTitle }}" class="">
+      <span class="icon-0711 icon-twitter-0711">
+      <img src="{{ 't-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+      </span>
+     </a>
+
+  <a target="_blank" href="//pinterest.com/pin/create/button/?url={{ permalinkURL }}&amp;media={{ product.featured_image | img_url: 'original' }}&amp;description={{ product.title | escape }}" class="">
+        <span class="icon-0711 icon-pinterest-0711">
+           <img src="{{ 'p-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+    </span>
+     </a>
+   
+{% comment %}       <a target="_blank" href="http://www.thefancy.com/fancyit?ItemURL={{ permalinkURL }}&amp;Title={{ product.title }}&amp;Category=Other&amp;ImageURL={{ product.featured_image | img_url: 'original' }}" class="">
+        <span class="icon-0711 icon-fancy-0711"></span>
+      </a>
+{% endcomment %}   
+   <a target="_blank" href="//plus.google.com/share?url={{ permalinkURL }}" class="">
+      <!-- Cannot get Google+ share count with JS yet -->
+      <span class="icon-0711 icon-google-0711">
+          <img src="{{ 'gp-alaz.png' | asset_url }}" alt="{{ shop.name }}" itemprop="">
+     </span>
+    </a>
+
+</div> 
+    
+  {% comment %}  code added by ALT (social sharing) (EH) {% endcomment %}  
+   
+
+  </div>
+</div>
+
+{% if settings.related_products_enable %}
+  {% assign grid_item_width = 'large--one-fifth medium--one-third small--one-half' %}
+{% comment %}  {% include 'related-products' %}{% endcomment %}
+{% endif %}
+
+{% comment %} {% if settings.product_reviews_enable %}
+  <hr>
+  <div id="shopify-product-reviews" data-id="{{ product.id }}">{{ product.metafields.spr.reviews }}</div>
+{% endif %}{% endcomment %}
+
+{{ 'option_selection.js' | shopify_asset_url | script_tag }}
+<script>
+  // Pre-loading product images, to avoid a lag when a thumbnail is clicked, or
+  // when a variant is selected that has a variant image.
+  Shopify.Image.preload({{ product.images | json }}, 'large');
+
+  var selectCallback = function(variant, selector) {
+
+    var $addToCart = $('#addToCart'),
+        $productPrice = $('#productPrice'),
+        //$comparePrice = $('#comparePrice'),
+    //    $variantQuantity = $('#variantQuantity'),
+        $quantityElements = $('.quantity-selector-tee, label + .js-qty'),
+        $addToCartText = $('#addToCartText'),
+        $featuredImage = $('#productPhotoImg');
+
+    if (variant) {
+      // Update variant image, if one is set
+      // Call timber_al.switchImage function in shop.js
+      if (variant.featured_image) {
+        var newImg = variant.featured_image,
+            el = $featuredImage[0];
+        Shopify.Image.switchImage(newImg, el, timber_al.switchImage);
+      }
+
+      // Select a valid variant if available
+      if (variant.available) {
+        // We have a valid product variant, so enable the submit button
+        $addToCart.removeClass('disabled').prop('disabled', false);
+        $addToCartText.html('Add to Cart');
+
+        // Show how many items are left, if below 10
+      /*  if (variant.inventory_management) {
+          if (variant.inventory_quantity < 10 && variant.inventory_quantity > 0) {
+            $variantQuantity.html({{ 'products.product.only_left' | t: count: '1' | json }}.replace('1', variant.inventory_quantity)).show();
+          } else {
+            $variantQuantity.hide();
+          }
+        }
+         */
+
+        $quantityElements.show();
+      } else {
+        // Variant is sold out, disable the submit button
+        $addToCart.addClass('disabled').prop('disabled', true);
+        $addToCartText.html('Sold Out');
+     //   $variantQuantity.hide();
+        $quantityElements.hide();
+      }
+
+      // Regardless of stock, update the product price
+      var customPriceFormat = timber_al.formatMoney( Shopify.formatMoney(variant.price, "{{ shop.money_format }}") );
+      $productPrice.html('$' + customPriceFormat);
+
+      // Also update and show the product's compare price if necessary
+      if ( variant.compare_at_price > variant.price ) {
+        var priceSaving = timber_al.formatSaleTag( Shopify.formatMoney(variant.compare_at_price - variant.price, "{{ shop.money_format }}") );
+        {% comment %}
+        priceSaving += ' (' + ( (variant.compare_at_price - variant.price)*100/(variant.compare_at_price) ).toFixed(0) + '%)';
+        {% endcomment %}
+        //$comparePrice.prepend('Save');
+        //$comparePrice.html({{ json["save_html"] | t: saved_amount: '[$]' | json }}.replace('[$]', priceSaving)).show();
+      } else {
+        //$comparePrice.hide();
+      }
+
+    } else {
+      // The variant doesn't exist, disable submit button.
+      // This may be an error or notice that a specific variant is not available.
+      $addToCart.addClass('disabled').prop('disabled', true);
+      $addToCartText.html('Unavailable');
+    //  $variantQuantity.hide();
+      $quantityElements.hide();
+    }
+  };
+
+  jQuery(function($) {
+    new Shopify.OptionSelectors('productSelect', {
+      product: {{ product | json }},
+      onVariantSelected: selectCallback,
+      enableHistoryState: true
+    });
+
+    // Add label if only one product option and it isn't 'Title'. Could be 'Size'.
+    {% if product.options.size == 1 and product.options.first != 'Title' %}
+      $('.selector-wrapper:eq(0)').prepend('<label>{{ product.options.first | escape }}</label>');
+    {% endif %}
+
+    // Hide selectors if we only have 1 variant and its title contains 'Default'.
+    {% if product.variants.size == 1 and product.variants.first.title contains 'Default' %}
+      $('.selector-wrapper').hide();
+    {% else %}
+      $('#variantBreak').removeClass('hr--clear');
+    {% endif %}
+  });
+</script>
+
+
+<script>/*!
+	Zoom v1.7.13 - 2014-04-29
+	Enlarge images on click or mouseover.
+	(c) 2014 Jack Moore - http://www.jacklmoore.com/zoom
+	license: http://www.opensource.org/licenses/mit-license.php
+*/
+(function(o){var t={url:!1,callback:!1,target:!1,duration:120,on:"mouseover",touch:!0,onZoomIn:!1,onZoomOut:!1,magnify:1};o.zoom=function(t,n,e,i){var u,c,a,m,l,r,s,f=o(t).css("position"),h=o(n);return t.style.position=/(absolute|fixed)/.test(f)?f:"relative",t.style.overflow="hidden",e.style.width=e.style.height="",o(e).addClass("zoomImg").css({position:"absolute",top:0,left:0,opacity:0,width:e.width*i,height:e.height*i,border:"none",maxWidth:"none",maxHeight:"none"}).appendTo(t),{init:function(){c=o(t).outerWidth(),u=o(t).outerHeight(),n===t?(m=c,a=u):(m=h.outerWidth(),a=h.outerHeight()),l=(e.width-c)/m,r=(e.height-u)/a,s=h.offset()},move:function(o){var t=o.pageX-s.left,n=o.pageY-s.top;n=Math.max(Math.min(n,a),0),t=Math.max(Math.min(t,m),0),e.style.left=t*-l+"px",e.style.top=n*-r+"px"}}},o.fn.zoom=function(n){return this.each(function(){var e,i=o.extend({},t,n||{}),u=i.target||this,c=this,a=o(c),m=document.createElement("img"),l=o(m),r="mousemove.zoom",s=!1,f=!1;(i.url||(e=a.find("img"),e[0]&&(i.url=e.data("src")||e.attr("src")),i.url))&&(function(){var o=u.style.position,t=u.style.overflow;a.one("zoom.destroy",function(){a.off(".zoom"),u.style.position=o,u.style.overflow=t,l.remove()})}(),m.onload=function(){function t(t){e.init(),e.move(t),l.stop().fadeTo(o.support.opacity?i.duration:0,1,o.isFunction(i.onZoomIn)?i.onZoomIn.call(m):!1)}function n(){l.stop().fadeTo(i.duration,0,o.isFunction(i.onZoomOut)?i.onZoomOut.call(m):!1)}var e=o.zoom(u,c,m,i.magnify);"grab"===i.on?a.on("mousedown.zoom",function(i){1===i.which&&(o(document).one("mouseup.zoom",function(){n(),o(document).off(r,e.move)}),t(i),o(document).on(r,e.move),i.preventDefault())}):"click"===i.on?a.on("click.zoom",function(i){return s?void 0:(s=!0,t(i),o(document).on(r,e.move),o(document).one("click.zoom",function(){n(),s=!1,o(document).off(r,e.move)}),!1)}):"toggle"===i.on?a.on("click.zoom",function(o){s?n():t(o),s=!s}):"mouseover"===i.on&&(e.init(),a.on("mouseenter.zoom",t).on("mouseleave.zoom",n).on(r,e.move)),i.touch&&a.on("touchstart.zoom",function(o){o.preventDefault(),f?(f=!1,n()):(f=!0,t(o.originalEvent.touches[0]||o.originalEvent.changedTouches[0]))}).on("touchmove.zoom",function(o){o.preventDefault(),e.move(o.originalEvent.touches[0]||o.originalEvent.changedTouches[0])}),o.isFunction(i.callback)&&i.callback.call(m)},m.src=i.url)})},o.fn.zoom.defaults=t})(window.jQuery);
+</script>
+
+{% comment %}{% include 'pixelProduct' %}{% endcomment %}
+
+
+<script>
+  /* Simple jQuery Equal Heights @version 1.5.1. Copyright (c) 2013 Matt Banks. Dual licensed under the MIT and GPL licenses. */
+!function(a){a.fn.equalHeights=function(){var b=0,c=a(this);return c.each(function(){var c=a(this).innerHeight();c>b&&(b=c)}),c.css("height",b)},a("[data-equal]").each(function(){var b=a(this),c=b.data("equal");b.find(c).equalHeights()})}(jQuery);
+
+/* Run function after window resize */
+var afterResize=(function(){var t={};return function(callback,ms,uniqueId){if(!uniqueId){uniqueId="Don't call this twice without a uniqueId";}if(t[uniqueId]){clearTimeout(t[uniqueId]);}t[uniqueId]=setTimeout(callback,ms);};})();
+
+window.timber_al = window.timber_al || {};
+
+
+timber_al.cacheSelectors = function () {
+  timber_al.cache = {
+    // General
+    $html: $('html'),
+    $body: $('body'),
+    $breadcrumbs: $('.breadcrumb'),
+
+    // Breakpoints (from timber_al.scss.liquid)
+    bpLarge: 769,
+
+   
+    // Product Page
+    $productImageWrap: $('#productPhoto'),
+    $productImage: $('#productPhotoImg'),
+    $thumbImages: $('#productThumbs').find('a.product-photo-thumb')
+  };
+}
+
+timber_al.init = function () {
+  timber_al.cacheSelectors();
+  timber_al.productImageSwitch();
+  timber_al.productImageZoom();
+};
+
+
+
+timber_al.productImageSwitch = function () {
+  if ( timber_al.cache.$thumbImages.length ) {
+    // Switch the main image with one of the thumbnails
+    // Note: this does not change the variant selected, just the image
+    timber_al.cache.$thumbImages.on('click', function(evt) {
+      evt.preventDefault();
+      var newImage = $(this).attr('href');
+      timber_al.switchImage(newImage, null, timber_al.cache.$productImage);
+    });
+  }
+};
+
+timber_al.switchImage = function (src, imgObject, el) {
+  // Make sure element is a jquery object
+  var $el = $(el);
+  $el.attr('src', src);
+    // Update new image src to grande
+    var zoomSrc = src.replace('_medium.','_1024x1024.').replace('_large.','_1024x1024.');
+    $el.attr('data-zoom', zoomSrc);
+
+    $(function() {
+      timber_al.productImageZoom();
+    });
+};
+
+timber_al.productImageZoom = function () {
+    if (!timber_al.cache.$productImageWrap.length) {
+      return;
+    };
+
+    // Destroy zoom (in case it was already set), then set it up again
+    timber_al.cache.$productImageWrap.trigger('zoom.destroy');
+
+    timber_al.cache.$productImageWrap.addClass('image-zoom').zoom({
+      url: timber_al.cache.$productImage.attr('data-zoom')
+    })
+};
+
+
+
+timber_al.formatMoney = function (val) {
+    val = val.replace('$','');
+    if (moneyFormat.indexOf('money') === -1) {
+      if (moneyFormat.indexOf({% raw %}'{{amount}}'{% endraw %}) > -1) {
+        val = val.replace('.','<sup>') + '</sup>';
+      }
+      else if (moneyFormat.indexOf({% raw %}'{{amount_with_comma_separator}}'{% endraw %}) > -1) {
+        val = val.replace(',','<sup>') + '</sup>';
+      }    
+    }
+  
+  return val;
+};
+
+timber_al.formatSaleTag = function (val) {
+  if (moneyFormat.indexOf('money') === -1) {
+    if (moneyFormat.indexOf({% raw %}'{{amount}}'{% endraw %}) > -1) {
+      return val.replace('.','<sup>') + '</sup>';
+    }
+    else if (moneyFormat.indexOf({% raw %}'{{amount_with_comma_separator}}'{% endraw %}) > -1) {
+      return val.replace(',','<sup>') + '</sup>';
+    }
+  }
+  return val;
+};
+
+// Initialize timber_al's JS on docready
+$(timber_al.init)
+
+var moneyFormat = '{{ shop.money_format }}';
+</script>
